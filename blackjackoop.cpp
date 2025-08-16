@@ -23,7 +23,10 @@ vector<int> cards = {1, 1, 1, 1,
 class Player {
 	public: 
 		int count;
-			
+		
+		void adjustCount(){
+
+	}
 };
 
 class Dealer {
@@ -49,12 +52,10 @@ class Deck{
 				return card;
 			}
 			deckEmpty();
-			return 0;
 		} 
 
 
 		void deal(){
-
 
 		}
 };
