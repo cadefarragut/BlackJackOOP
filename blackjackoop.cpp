@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <random>
+#include <string>
 using namespace std;
 
 vector<int> cards = {
@@ -22,15 +23,29 @@ vector<int> cards = {
 
 class Hand {
 	public:
+		int count = 0;
+		int softAce = 0;
 		void addCard(int card){
-
+			if ( card < 11 ) count += card;
+			if ( card > 10 && card < 14 ) count += 10;
+			if ( card == 14 ) {
+				count += 11; 		
+				softAce++;
+			}
+			while ( count > 21 && softAce > 0 ){
+				count -= 11;
+				softAce--;
+			}
+			if ( count > 21 && softAce == 0) cout << "Busted" << endl;	
 		}
 
 };
+
+
 class Deck{
 	public:
 		int deckEmpty(){
-			cout << "Out of Cards. Thanks for Playinig" << endl;
+			cout << "Out of Cards. Thanks for Playing" << endl;
 			return 0;
 		}
 
@@ -76,22 +91,36 @@ class Game{
 		void deal(){
 			// Player receives 2 cards
 			// Dealer receives 1 card afterwards
-				
-
 			int card = deck.newCard();
 			player.addCard(card);
-			cout << "Dealer: " << deck.cardtoString(card) << endl;	
 			int card2 = deck.newCard();
 			player.addCard(card2);	
 			int card3 = deck.newCard();
 			dealer.addCard(card3);
-			cout << "Player: " << deck.cardtoString(card2) << " " << deck.cardtoString(card3) << endl;
+			cout << "Dealer: " << deck.cardtoString(card3) << endl;	
+			cout << "Player: " << deck.cardtoString(card) << " " << deck.cardtoString(card2) << endl;
 	}
-	// TODO End Game if Dealer has BlackJack off rip Players Turn
-		// Dealers Turn Ace Config
+		// TODO 
+	// 	End Game if Dealer has BlackJack off rip 
+	// 	Players Turn
+		// Counting System with Aces
 		void playersTurn(){
-
-		}
+			string x;	
+			cout << "1: Hit ,,, 2: Stand :: ";
+			cin >> x;
+			while( x == "1"){
+				int card = deck.newCard();
+				player.addCard(card);
+				cout << deck.cardtoString(card);
+				if ( player.count > 21 ){
+					cout << "busted with " << player.count << endl;
+					break;
+				}
+				cin >> x;
+				cout << endl;
+			}
+				
+		} 
 
 
 
