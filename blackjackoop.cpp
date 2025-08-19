@@ -24,8 +24,16 @@ class Player {
 	public: 
 		int count;
 		
-		void adjustCount(){
+		void adjustPlayerCount(int card){
+			if(card > 0 && card < 11){
+				count+=card;
+			}
+			if ( card == 11 || card == 12 || card == 13 ){
+				card += 10;		
+			}
+			if ( card == 14 ){
 
+			}
 	}
 };
 
@@ -33,11 +41,23 @@ class Dealer {
 	public:
 		int count;
 
+		void adjustDealerCount(int card){
+			if(card > 0 && card < 11){
+				count+=card;
+			}
+			if ( card == 11 || card == 12 || card == 13 ){
+				card += 10;		
+			}
+			if ( card == 14 ){
+
+		}
+	}
 };
 
 class Deck{
 	public:
-	
+		Player player;	
+		Dealer dealer;		
 		int deckEmpty(){
 			cout << "Out of Cards. Thanks for Playinig" << endl;
 			return 0;
@@ -52,26 +72,58 @@ class Deck{
 				return card;
 			}
 			deckEmpty();
+			return 0;	
 		} 
 
-
-		void deal(){
-
+		string cardtoString(int card){
+			if ( card > 0 && card < 11){
+				return to_string(card);
+			}
+			else if ( card == 11 ){
+				return "J";
+			}
+			else if ( card == 12 ){
+				return "Q";
+			}
+			else if ( card == 13 ){
+				return "K";
+			}
+			else return "A";
 		}
+		void deal(){
+			// Player receives 2 cards
+			// Dealer receives 1 card afterwards
+				
+
+			int card = newCard();
+			player.adjustPlayerCount(card);
+			cout << "Dealer: " << cardtoString(card) << endl;	
+			int card2 = newCard();
+			player.adjustPlayerCount(card2);	
+			int card3 = newCard();
+			dealer.adjustDealerCount(card3);
+			cout << "Player: " << cardtoString(card2) << " " << cardtoString(card3) << endl;
+	}
 };
 
 class Game{
-	private:
-		Player player;
-		Dealer dealer;
+	public:
 		Deck deck;
 
-	public:
-	
 		void start(){
 			cout << "Welcome to BlackJack" << endl;	
 			deck.deal();
 		}
+		// TODO
+		// End Game if Dealer has BlackJack off rip
+		// Players Turn
+		// Dealers Turn
+		// Ace Config
+		void playersTurn(){
+
+		}
+
+
 
 };
 
@@ -80,5 +132,7 @@ class Game{
 int main(){
 	Game blackjack;
 	blackjack.start();
+	blackjack.playersTurn();
+	
 	return 0;
 }
