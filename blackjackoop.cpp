@@ -19,7 +19,8 @@ vector<int> cards = {
 		     11, 11, 11, 11,
 		     12, 12, 12, 12,
 		     13, 13, 13, 13,
-		     14, 14, 14, 14};
+		     14, 14, 14, 14
+	};
 
 class Hand {
 	public:
@@ -36,23 +37,22 @@ class Hand {
 				count -= 11;
 				softAce--;
 			}
-			if ( count > 21 && softAce == 0) cout << "Busted" << endl;	
 		}
-
 };
 
 
 class Deck{
 	public:
 		int deckEmpty(){
-			cout << "Out of Cards. Thanks for Playing" << endl;
-			return 0;
+			if (cards.empty()){
+				return true;
+			}
+			return false;
 		}
 
 		int newCard(){
 			
-			if(cards.empty()){
-				deckEmpty();
+			if(deckEmpty()){
 				return 0;	
 			}
 			int card = cards.back();	
@@ -84,8 +84,28 @@ class Game{
 		Hand dealer;
 
 		void start(){
+			player.count = 0;
+			dealer.count = 0;
 			cout << "Welcome to BlackJack" << endl;	
-			deal();
+		}
+
+		bool isBlackJack(){
+			if (player.count == 21){
+				cout << "BlackJack!" << endl;
+				return true;
+			}	
+			return false;
+		}
+
+		bool isDealerBlackJack(){
+			if(cards.back()){
+				int card = deck.newCard();				
+				// This is wrong. Is adding up vector value and not Card Value	
+				cout << deck.cardtoString(card) << endl;	
+				cout << "Dealer BlackJack" << endl;
+				return true;		
+			}
+			return false;		
 		}
 
 		void deal(){
@@ -100,10 +120,8 @@ class Game{
 			cout << "Dealer: " << deck.cardtoString(card3) << endl;	
 			cout << "Player: " << deck.cardtoString(card) << " " << deck.cardtoString(card2) << endl;
 	}
-		// TODO 
-	// 	End Game if Dealer has BlackJack off rip 
-	// 	Players Turn
-		// Counting System with Aces
+
+
 		void playersTurn(){
 			string x;	
 			cout << "1: Hit ,,, 2: Stand :: ";
@@ -111,9 +129,9 @@ class Game{
 			while( x == "1"){
 				int card = deck.newCard();
 				player.addCard(card);
-				cout << deck.cardtoString(card);
+				cout << deck.cardtoString(card) << endl;
 				if ( player.count > 21 ){
-					cout << "busted with " << player.count << endl;
+					cout << "player busted with " << player.count << endl;
 					break;
 				}
 				cin >> x;
@@ -122,18 +140,46 @@ class Game{
 				
 		} 
 
+		void dealersTurn(){
+			while(dealer.count < 17){
+				int card = deck.newCard();
+				dealer.addCard(card);
+				cout << deck.cardtoString(card) << endl;
+				
+				if ( dealer.count > 21 ){
+					cout << "dealer busts with " << dealer.count << endl;
+					break;
+				}
+			}
 
+		}
+
+		void scoreCheck(){
+			if(player.count > dealer.count && player.count < 22) cout << "You win" << endl;
+			if(player.count < dealer.count && dealer.count < 22) cout << "Dealer wins" << endl;
+			if(player.count == dealer.count) cout << "Push" << endl;
+	}
 
 };
 
-
-
+//TODO
+// Figure out Blackjack off rip
+// Fix Aces
 int main(){
-	Game blackjack;	
+	Game blackjack;
 	mt19937 rng(time(nullptr));
 	shuffle(cards.begin(), cards.end(), rng);
-	blackjack.start();
-	blackjack.playersTurn();
-	
+	while(!blackjack.deck.deckEmpty()){
+		blackjack.start();
+		blackjack.deal();
+		if (blackjack.isBlackJack()) continue;
+		if (blackjack.isDealerBlackJack()) continue;
+		blackjack.playersTurn();
+		if ( blackjack.player.count < 22){
+			blackjack.dealersTurn();	
+		}	
+		blackjack.scoreCheck();	
+	}
+	cout << "Deck is out. Thanks for playing!" << endl;
 	return 0;
 }
