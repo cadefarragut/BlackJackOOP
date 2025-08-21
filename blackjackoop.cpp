@@ -1,10 +1,15 @@
 #include <iostream>
-#include <map>
 #include <vector>
 #include <algorithm>
 #include <random>
 #include <string>
+#include <stdexcept>
+#include <chrono>
+#include <thread>
+
 using namespace std;
+using namespace std::chrono_literals;
+using std::this_thread::sleep_for;
 
 vector<int> cards = {
 		     2, 2, 2, 2,
@@ -26,6 +31,7 @@ class Hand {
 	public:
 		int count = 0;
 		int softAce = 0;
+
 		void addCard(int card){
 			if ( card < 11 ) count += card;
 			if ( card > 10 && card < 14 ) count += 10;
@@ -49,11 +55,11 @@ class Deck{
 			}
 			return false;
 		}
-
+		
 		int newCard(){
 			
 			if(deckEmpty()){
-				return 0;	
+				throw runtime_error("Deck empty");
 			}
 			int card = cards.back();	
 			cards.pop_back();
@@ -64,62 +70,81 @@ class Deck{
 			if ( card > 0 && card < 11){
 				return to_string(card);
 			}
-			else if ( card == 11 ){
-				return "J";
-			}
-			else if ( card == 12 ){
-				return "Q";
-			}
-			else if ( card == 13 ){
-				return "K";
-			}
-			else return "A";
+			if ( card == 11 ) return "J";
+			if ( card == 12 ) return "Q";
+			if ( card == 13 ) return "K";
+			if ( card == 14 ) return "A";
+			return "?";	
+		}
+		
+		int peek(){
+			return cards.back();
 		}
 };
 
 class Game{
 	public:
 		Deck deck;
-		Hand player;
-		Hand dealer;
+		Hand player, dealer;
+		int dealer_up_card = -1;	
+		int dealer_hole_card = -1;
+		bool hole_dealt = false;
+		
+		static bool isTenValue(int r) {return r >= 10 && r <= 13; }
+
 
 		void start(){
-			player.count = 0;
-			dealer.count = 0;
+			player = Hand{};
+			dealer = Hand{};
 			cout << "Welcome to BlackJack" << endl;	
 		}
 
 		bool isBlackJack(){
-			if (player.count == 21){
+			if (player.count == 21 && dealer.count != 21){
 				cout << "BlackJack!" << endl;
 				return true;
-			}	
-			return false;
-		}
-
-		bool isDealerBlackJack(){
-			if(cards.back()){
-				int card = deck.newCard();				
-				// This is wrong. Is adding up vector value and not Card Value	
-				cout << deck.cardtoString(card) << endl;	
-				cout << "Dealer BlackJack" << endl;
-				return true;		
 			}
-			return false;		
+			if( dealer.count == 21 && player.count != 21){
+				cout << "Dealer BlackJack" << endl;
+				return true;
+			}
+			if( dealer.count == 21 && player.count == 21){
+				cout << "BlackJack Push" << endl;
+				return true;	
+			}
+			return false;	
+		}
+		
+		bool isDealerBlackJack(){
+			if (!(dealer_up_card == 14 || isTenValue(dealer_up_card))) return false;
+			int hole = deck.peek();
+			if(dealer_up_card == 14) return isTenValue(hole);
+			return hole == 14;
 		}
 
 		void deal(){
-			// Player receives 2 cards
-			// Dealer receives 1 card afterwards
+			hole_dealt = false;
 			int card = deck.newCard();
 			player.addCard(card);
+
+			dealer_up_card = deck.newCard();
+			dealer.addCard(dealer_up_card);
+
 			int card2 = deck.newCard();
 			player.addCard(card2);	
-			int card3 = deck.newCard();
-			dealer.addCard(card3);
-			cout << "Dealer: " << deck.cardtoString(card3) << endl;	
-			cout << "Player: " << deck.cardtoString(card) << " " << deck.cardtoString(card2) << endl;
-	}
+			bool dealer_bj = false;	
+			if(isDealerBlackJack()){
+				dealer_hole_card = deck.newCard();
+				dealer.addCard(dealer_hole_card);
+				hole_dealt = true;
+				dealer_bj = true;
+			}
+				cout << "Dealer: " << deck.cardtoString(dealer_up_card) << " [hidden]" << endl;	
+				cout << "Player: " << deck.cardtoString(card) << " " << deck.cardtoString(card2) << endl;
+				if (dealer_bj){
+					cout << "Hidden Card was " << deck.cardtoString(dealer_hole_card) << endl;
+				}
+		}
 
 
 		void playersTurn(){
@@ -127,6 +152,10 @@ class Game{
 			cout << "1: Hit ,,, 2: Stand :: ";
 			cin >> x;
 			while( x == "1"){
+				if ( deck.deckEmpty())	{
+					cout << "Deck is out " << endl;
+					return;
+				}
 				int card = deck.newCard();
 				player.addCard(card);
 				cout << deck.cardtoString(card) << endl;
@@ -134,29 +163,49 @@ class Game{
 					cout << "player busted with " << player.count << endl;
 					break;
 				}
+				
+				cout << "1: Hit ,,, 2: Stand :: ";
 				cin >> x;
 				cout << endl;
 			}
-				
+					
 		} 
 
 		void dealersTurn(){
+			if (!hole_dealt){
+				dealer_hole_card = deck.newCard();
+				dealer.addCard(dealer_hole_card);
+				hole_dealt = true;
+				cout << "Hidden card was " << deck.cardtoString(dealer_hole_card) << endl;
+				sleep_for(1s);
+			} else {
+				cout << "Hidden card was " << deck.cardtoString(dealer_hole_card) << endl;
+				sleep_for(1s);
+			}
+			
 			while(dealer.count < 17){
+				if ( deck.deckEmpty())	{
+					cout << "Deck is out " << endl;
+					return;
+				}
 				int card = deck.newCard();
 				dealer.addCard(card);
-				cout << deck.cardtoString(card) << endl;
-				
+				cout << deck.cardtoString(card) << " " << flush;
 				if ( dealer.count > 21 ){
+					cout << endl;
 					cout << "dealer busts with " << dealer.count << endl;
 					break;
 				}
+				sleep_for(1s);
 			}
+			cout << endl;
 
 		}
 
 		void scoreCheck(){
-			if(player.count > dealer.count && player.count < 22) cout << "You win" << endl;
-			if(player.count < dealer.count && dealer.count < 22) cout << "Dealer wins" << endl;
+			sleep_for(1s);
+			if(player.count > dealer.count && player.count < 22) cout << "You win with a " << player.count << endl;
+			if(player.count < dealer.count && dealer.count < 22) cout << "Dealer wins with a " << dealer.count << endl;
 			if(player.count == dealer.count) cout << "Push" << endl;
 	}
 
@@ -169,16 +218,19 @@ int main(){
 	Game blackjack;
 	mt19937 rng(time(nullptr));
 	shuffle(cards.begin(), cards.end(), rng);
-	while(!blackjack.deck.deckEmpty()){
+	while(cards.size() >= 4){
 		blackjack.start();
 		blackjack.deal();
-		if (blackjack.isBlackJack()) continue;
-		if (blackjack.isDealerBlackJack()) continue;
+		if (blackjack.isBlackJack()) {
+			cout << endl;
+			continue;
+		}
 		blackjack.playersTurn();
 		if ( blackjack.player.count < 22){
 			blackjack.dealersTurn();	
 		}	
-		blackjack.scoreCheck();	
+		blackjack.scoreCheck();
+		cout << endl;
 	}
 	cout << "Deck is out. Thanks for playing!" << endl;
 	return 0;
