@@ -34,7 +34,7 @@ class Hand {
 				softAce++;
 			}
 			while ( count > 21 && softAce > 0 ){
-				count -= 11;
+				count -= 10;
 				softAce--;
 			}
 		}
@@ -163,8 +163,8 @@ class Game{
 };
 
 //TODO
-// Figure out Blackjack off rip
-// Fix Aces
+// Fix isDealerBlackJack()
+// Clean up Code, maybe optimize more
 int main(){
 	Game blackjack;
 	mt19937 rng(time(nullptr));
